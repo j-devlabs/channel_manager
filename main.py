@@ -1,24 +1,25 @@
-import json
 import sys
-import os
 import argparse
-from playback import start_channel, stop_channel, restart_channel, status_channel
+from pathlib import Path
+from src.service.RegistryManager import RegistryManager as regMng
+from src.service.ChannelManager import ChannelManager as chanMng
+from src.service.PlaybackManager import PlaybackManager as playMng
 
-# Default HLS output root (same for all channels)
-HLS_ROOT = os.environ.get("HLS_ROOT", "/var/www/hls")
+# region ─── CONFIGURATION ───────────────────────────────────────
+TIME_ZONE = "America/Puerto_Rico"  # UTC−4
+CONFIG_ROOT = Path("/opt/vlc/config")
+CONCAT_ROOT = Path("/opt/vlc/channels")
+HLS_ROOT = Path("/opt/vlc/streams")
 
-# JSON registry file
-REGISTRY_FILE = "channels.json"
+REGISTRY_FILE = CONFIG_ROOT / "channels.json"
+MASTER_PLAYLIST = HLS_ROOT / "master.m3u"
+XMLTV_FILE = HLS_ROOT / "guide.xml"
 
-# Load channel definitions
-
-
-def load_registry():
-    if not os.path.exists(REGISTRY_FILE):
-        print(f"Registry file {REGISTRY_FILE} not found.")
-        sys.exit(1)
-    with open(REGISTRY_FILE) as f:
-        return json.load(f)
+HOST_URL = "http://localhub.local:8090/live"
+VIDEO_EXTS = {".mp4", ".mkv", ".avi", ".mov", ".flv", ".ts", ".webm"}
+SEGMENT_TIME = 10   # seconds per segment
+LIST_SIZE = 6    # number of segments in the live .m3u8
+# endregion
 
 
 def main():
@@ -44,7 +45,7 @@ def main():
     p_run.add_argument('ids', nargs='*', help='Channel IDs (omit for all)')
 
     args = parser.parse_args()
-    registry = load_registry()
+    registry = regMng.load_registry()
 
     if args.command == 'list':
         for cid in registry:
@@ -55,21 +56,21 @@ def main():
         if not cfg:
             print(f"Unknown channel: {args.id}")
             sys.exit(1)
-        start_channel(cfg)
+        playMng.start_channel(cfg)
 
     elif args.command == 'stop':
         cfg = registry.get(args.id)
         if not cfg:
             print(f"Unknown channel: {args.id}")
             sys.exit(1)
-        stop_channel(cfg)
+        playMng.stop_channel(cfg)
 
     elif args.command == 'restart':
         cfg = registry.get(args.id)
         if not cfg:
             print(f"Unknown channel: {args.id}")
             sys.exit(1)
-        restart_channel(cfg)
+        playMng.restart_channel(cfg)
 
     elif args.command == 'status':
         if args.id:
@@ -77,10 +78,10 @@ def main():
             if not cfg:
                 print(f"Unknown channel: {args.id}")
                 sys.exit(1)
-            status_channel(cfg)
+            playMng.status_channel(cfg)
         else:
             for cfg in registry.values():
-                status_channel(cfg)
+                playMng.status_channel(cfg)
 
     elif args.command == 'run':
         targets = args.ids or list(registry.keys())
@@ -89,7 +90,7 @@ def main():
             if not cfg:
                 print(f"Unknown channel: {cid}")
                 continue
-            start_channel(cfg)
+            playMng.start_channel(cfg)
 
 
 if __name__ == '__main__':
