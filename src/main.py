@@ -1,9 +1,8 @@
 import sys
 import argparse
 from pathlib import Path
-from src.service.RegistryManager import RegistryManager as regMng
-from src.service.ChannelManager import ChannelManager as chanMng
-from src.service.PlaybackManager import PlaybackManager as playMng
+import services.registry_manager as rm
+import services.playback_manager as pm
 
 # region ─── CONFIGURATION ───────────────────────────────────────
 TIME_ZONE = "America/Puerto_Rico"  # UTC−4
@@ -45,7 +44,7 @@ def main():
     p_run.add_argument('ids', nargs='*', help='Channel IDs (omit for all)')
 
     args = parser.parse_args()
-    registry = regMng.load_registry()
+    registry = rm.load_registry()
 
     if args.command == 'list':
         for cid in registry:
@@ -56,21 +55,21 @@ def main():
         if not cfg:
             print(f"Unknown channel: {args.id}")
             sys.exit(1)
-        playMng.start_channel(cfg)
+        pm.start_channel(cfg)
 
     elif args.command == 'stop':
         cfg = registry.get(args.id)
         if not cfg:
             print(f"Unknown channel: {args.id}")
             sys.exit(1)
-        playMng.stop_channel(cfg)
+        pm.stop_channel(cfg)
 
     elif args.command == 'restart':
         cfg = registry.get(args.id)
         if not cfg:
             print(f"Unknown channel: {args.id}")
             sys.exit(1)
-        playMng.restart_channel(cfg)
+        pm.restart_channel(cfg)
 
     elif args.command == 'status':
         if args.id:
@@ -78,10 +77,10 @@ def main():
             if not cfg:
                 print(f"Unknown channel: {args.id}")
                 sys.exit(1)
-            playMng.status_channel(cfg)
+            pm.status_channel(cfg)
         else:
             for cfg in registry.values():
-                playMng.status_channel(cfg)
+                pm.status_channel(cfg)
 
     elif args.command == 'run':
         targets = args.ids or list(registry.keys())
@@ -90,7 +89,7 @@ def main():
             if not cfg:
                 print(f"Unknown channel: {cid}")
                 continue
-            playMng.start_channel(cfg)
+            pm.start_channel(cfg)
 
 
 if __name__ == '__main__':
