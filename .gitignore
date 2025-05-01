@@ -1,0 +1,56 @@
+# Byte-compiled / optimized / compiled Python files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+env/
+.venv/
+
+# VSCode settings
+.vscode/
+
+# Logs
+*.log
+logs/
+*.pid
+
+# Configurations
+config.ini
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Python egg files
+*.egg
+*.egg-info/
+dist/
+build/
+*.manifest
+*.spec
+
+# Cache
+*.cache
+*.pyo
+*.tmp
+
+# Test coverage
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# MyPy and type-checking
+.mypy_cache/
+.dmypy.json
+.pyre/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Other
+*.bak
+*.swp
+*.swo

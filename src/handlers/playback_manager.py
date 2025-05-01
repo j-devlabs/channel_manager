@@ -2,7 +2,7 @@
 import os
 import subprocess
 import signal
-from __main__ import load_config
+from utils.config_reader import load_config
 
 # Start a single channel: spawn ffmpeg in background, record its PID
 
