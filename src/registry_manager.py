@@ -2,7 +2,7 @@ import json
 import os
 import sys
 
-from main import CONFIG_ROOT, REGISTRY_FILE
+from __main__ import CONFIG_ROOT, REGISTRY_FILE
 
 
 def load_registry():

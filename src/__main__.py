@@ -2,8 +2,8 @@ import configparser
 import sys
 import argparse
 from pathlib import Path
-import services.registry_manager as rm
-import services.playback_manager as pm
+import registry_manager as rm
+import playback_manager as pm
 
 # # region ─── CONFIGURATION ───────────────────────────────────────
 # TIME_ZONE = "America/Puerto_Rico"  # UTC−4
@@ -26,6 +26,7 @@ def load_config():
     config = configparser.ConfigParser()
     config.read(Path(__file__).parent.parent / "config.ini")
     return config
+
 
 def main():
     parser = argparse.ArgumentParser(

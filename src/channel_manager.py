@@ -1,5 +1,5 @@
 from pathlib import Path
-import services.registry_manager as rm
+import registry_manager as rm
 
 
 def add_channel(chan_id: str, display_name: str, media_path: str):
