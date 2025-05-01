@@ -1,25 +1,31 @@
+import configparser
 import sys
 import argparse
 from pathlib import Path
 import services.registry_manager as rm
 import services.playback_manager as pm
 
-# region ─── CONFIGURATION ───────────────────────────────────────
-TIME_ZONE = "America/Puerto_Rico"  # UTC−4
-CONFIG_ROOT = Path("/opt/vlc/config")
-CONCAT_ROOT = Path("/opt/vlc/channels")
-HLS_ROOT = Path("/opt/vlc/streams")
+# # region ─── CONFIGURATION ───────────────────────────────────────
+# TIME_ZONE = "America/Puerto_Rico"  # UTC−4
+# CONFIG_ROOT = Path("/opt/xhubsrc/config")
+# CONCAT_ROOT = Path("/opt/vlc/channels")
+# HLS_ROOT = Path("/opt/vlc/streams")
 
-REGISTRY_FILE = CONFIG_ROOT / "channels.json"
-MASTER_PLAYLIST = HLS_ROOT / "master.m3u"
-XMLTV_FILE = HLS_ROOT / "guide.xml"
+# REGISTRY_FILE = CONFIG_ROOT / "channels.json"
+# MASTER_PLAYLIST = HLS_ROOT / "master.m3u"
+# XMLTV_FILE = HLS_ROOT / "guide.xml"
 
-HOST_URL = "http://localhub.local:8090/live"
-VIDEO_EXTS = {".mp4", ".mkv", ".avi", ".mov", ".flv", ".ts", ".webm"}
-SEGMENT_TIME = 10   # seconds per segment
-LIST_SIZE = 6    # number of segments in the live .m3u8
-# endregion
+# HOST_URL = "http://localhub.local:8090/live"
+# VIDEO_EXTS = {".mp4", ".mkv", ".avi", ".mov", ".flv", ".ts", ".webm"}
+# SEGMENT_TIME = 10   # seconds per segment
+# LIST_SIZE = 6    # number of segments in the live .m3u8
+# # endregion
 
+
+def load_config():
+    config = configparser.ConfigParser()
+    config.read(Path(__file__).parent.parent / "config.ini")
+    return config
 
 def main():
     parser = argparse.ArgumentParser(

@@ -2,13 +2,15 @@
 import os
 import subprocess
 import signal
+from main import load_config
 
-from main import HLS_ROOT
 # Start a single channel: spawn ffmpeg in background, record its PID
 
 
 def start_channel(cfg):
     cid = cfg["id"]
+    conf = load_config()
+    HLS_ROOT = conf["paths"]["hls_root"]
     out_dir = os.path.join(HLS_ROOT, cid)
     os.makedirs(out_dir, exist_ok=True)
 
@@ -46,6 +48,8 @@ def start_channel(cfg):
 
 def stop_channel(cfg):
     cid = cfg["id"]
+    conf = load_config()
+    HLS_ROOT = conf["paths"]["hls_root"]
     pid_file = os.path.join(HLS_ROOT, cid, f"{cid}.pid")
     if not os.path.exists(pid_file):
         print(f"Channel '{cid}' is not running (no pid file).")
@@ -67,6 +71,8 @@ def restart_channel(cfg):
 
 def status_channel(cfg):
     cid = cfg["id"]
+    conf = load_config()
+    HLS_ROOT = conf["paths"]["hls_root"]
     pid_file = os.path.join(HLS_ROOT, cid, f"{cid}.pid")
     if os.path.exists(pid_file):
         with open(pid_file) as f:
