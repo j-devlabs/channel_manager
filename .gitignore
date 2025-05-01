@@ -54,3 +54,7 @@ htmlcov/
 *.bak
 *.swp
 *.swo
+
+# channel-manager
+config/
+media/
