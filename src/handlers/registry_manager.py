@@ -6,14 +6,14 @@ import sys
 from utils.config_reader import load_config
 
 
-def load_registry():
+def load_registry() -> list:
     conf = load_config()
     REGISTRY_FILE = Path(conf["Paths"]["REGISTRY_FILE"])
     if not os.path.exists(REGISTRY_FILE):
-        print(f"Registry file {REGISTRY_FILE} not found.")
-        sys.exit(1)
+        return []  # Return empty list if file doesn't exist
     with open(REGISTRY_FILE) as f:
-        return json.load(f)
+        data = json.load(f)
+        return [] if data == {} else data  # Convert empty dict to empty list
 
 
 def save_registry(reg: list[dict]):
@@ -23,4 +23,3 @@ def save_registry(reg: list[dict]):
     CONFIG_ROOT = Path(conf["Paths"]["CONFIG_ROOT"])
     CONFIG_ROOT.mkdir(parents=True, exist_ok=True)
     REGISTRY_FILE.write_text(json.dumps(reg, indent=2))
-    pass

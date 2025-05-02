@@ -37,6 +37,7 @@ def add_channel(chan_id: str, display_name: str, media_path: str):
         print(
             f"✅ Added channel '{chan_id}' → '{display_name}' with media directory: {media_path}")
 
+    reg.append(entry)  # Add the new entry to the registry
     rm.save_registry(reg)
     return True
 
