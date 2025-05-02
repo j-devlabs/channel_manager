@@ -3,6 +3,7 @@ from pathlib import Path
 import subprocess
 import signal
 from . import playlist_manager as playlist
+from . import channel_manager as cm
 from utils.config_reader import load_config
 
 # Start a single channel: spawn ffmpeg in background, record its PID
@@ -11,12 +12,12 @@ from utils.config_reader import load_config
 def launch_ffmpeg(cfg, concat_path):
     cid = cfg["id"]
     conf = load_config()
+    CHAN_ROOT = Path(conf["Paths"]["CHAN_ROOT"])
     HLS_ROOT = Path(conf["Paths"]["HLS_ROOT"])
     SEGMENT_TIME = conf["HLS"]["SEGMENT_TIME"]
     LIST_SIZE = conf["HLS"]["LIST_SIZE"]
-    LOG_ROOT = Path(conf["Paths"]["LOG_ROOT"])
     out_dir = HLS_ROOT/cid
-    log_dir = LOG_ROOT/cid
+    log_dir = CHAN_ROOT/cid
     os.makedirs(out_dir, exist_ok=True)
     os.makedirs(log_dir, exist_ok=True)
 
@@ -56,7 +57,7 @@ def launch_ffmpeg(cfg, concat_path):
     )
 
     # Store PID for later control
-    pid_file = os.path.join(out_dir, f"{cid}.pid")
+    pid_file = os.path.join(CHAN_ROOT, cid, f"{cid}.pid")
     with open(pid_file, "w") as f:
         f.write(str(p.pid))
 
@@ -67,11 +68,11 @@ def launch_ffmpeg(cfg, concat_path):
 def start_channel(cfg):
     cid = cfg["id"]
     conf = load_config()
-    HLS_ROOT = Path(conf["Paths"]["HLS_ROOT"])
-    pid_file = HLS_ROOT/cid/f"{cid}.pid"
+    CHAN_ROOT = Path(conf["Paths"]["CHAN_ROOT"])
+    pid_file = CHAN_ROOT/cid/f"{cid}.pid"
 
     # Check if already running
-    if os.path.exists(pid_file):
+    if cm.channel_is_running(cfg):
         print(f"Channel '{cid}' is already running.")
         return
 

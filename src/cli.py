@@ -80,10 +80,10 @@ def main():
             if not cfg:
                 print(f"Unknown channel: {args.id}")
                 sys.exit(1)
-            cm.status_channel(cfg)
+            cm.channel_is_running(cfg)
         else:
             for cfg in registry:
-                cm.status_channel(cfg)
+                cm.channel_is_running(cfg)
 
     elif args.command == 'run':
         targets = args.ids or [cfg["id"] for cfg in registry]

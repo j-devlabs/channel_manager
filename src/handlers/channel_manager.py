@@ -79,7 +79,7 @@ def list_channels(self):
     pass
 
 
-def status_channel(cfg):
+def channel_is_running(cfg):
     cid = cfg["id"]
     conf = load_config()
     HLS_ROOT = conf["Paths"]["HLS_ROOT"]
@@ -92,7 +92,7 @@ def status_channel(cfg):
                 # Check if process exists in /proc
                 if os.path.exists(f"/proc/{pid}"):
                     print(f"Channel '{cid}' is running (pid={pid})")
-                    return
+                    return True
             except ValueError:
                 pass
 
@@ -100,3 +100,4 @@ def status_channel(cfg):
         os.remove(pid_file)
 
     print(f"Channel '{cid}' is stopped")
+    return False
