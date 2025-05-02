@@ -44,25 +44,25 @@ def main():
         add_channel(args.id, args.name, args.path)
 
     elif args.command == 'list':
-        for cid in registry:
-            print(cid)
+        for cfg in registry:
+            print(cfg["id"])
 
     elif args.command == 'start':
-        cfg = registry.get(args.id)
+        cfg = next((cfg for cfg in registry if cfg["id"] == args.id), None)
         if not cfg:
             print(f"Unknown channel: {args.id}")
             sys.exit(1)
         pm.start_channel(cfg)
 
     elif args.command == 'stop':
-        cfg = registry.get(args.id)
+        cfg = next((cfg for cfg in registry if cfg["id"] == args.id), None)
         if not cfg:
             print(f"Unknown channel: {args.id}")
             sys.exit(1)
         pm.stop_channel(cfg)
 
     elif args.command == 'restart':
-        cfg = registry.get(args.id)
+        cfg = next((cfg for cfg in registry if cfg["id"] == args.id), None)
         if not cfg:
             print(f"Unknown channel: {args.id}")
             sys.exit(1)
@@ -70,21 +70,22 @@ def main():
 
     elif args.command == 'status':
         if args.id:
-            cfg = registry.get(args.id)
+            cfg = next((cfg for cfg in registry if cfg["id"] == args.id), None)
             if not cfg:
                 print(f"Unknown channel: {args.id}")
                 sys.exit(1)
             pm.status_channel(cfg)
         else:
-            for cfg in registry.values():
+            for cfg in registry:
                 pm.status_channel(cfg)
 
     elif args.command == 'run':
-        targets = args.ids or list(registry.keys())
-        for cid in targets:
-            cfg = registry.get(cid)
+        targets = args.ids or [cfg["id"] for cfg in registry]
+        for target_id in targets:
+            cfg = next(
+                (cfg for cfg in registry if cfg["id"] == target_id), None)
             if not cfg:
-                print(f"Unknown channel: {cid}")
+                print(f"Unknown channel: {target_id}")
                 continue
             pm.start_channel(cfg)
 
