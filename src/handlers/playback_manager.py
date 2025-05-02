@@ -109,16 +109,3 @@ def stop_channel(cfg):
 def restart_channel(cfg):
     stop_channel(cfg)
     start_channel(cfg)
-
-
-def status_channel(cfg):
-    cid = cfg["id"]
-    conf = load_config()
-    HLS_ROOT = conf["paths"]["hls_root"]
-    pid_file = os.path.join(HLS_ROOT, cid, f"{cid}.pid")
-    if os.path.exists(pid_file):
-        with open(pid_file) as f:
-            pid = f.read().strip()
-        print(f"Channel '{cid}' is running (pid={pid})")
-    else:
-        print(f"Channel '{cid}' is stopped")

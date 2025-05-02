@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from . import registry_manager as rm
 from utils.config_reader import load_config
@@ -76,3 +77,26 @@ def list_channels(self):
         list: A list of dictionaries containing channel details.
     """
     pass
+
+
+def status_channel(cfg):
+    cid = cfg["id"]
+    conf = load_config()
+    HLS_ROOT = conf["Paths"]["HLS_ROOT"]
+    pid_file = os.path.join(HLS_ROOT, cid, f"{cid}.pid")
+
+    if os.path.exists(pid_file):
+        with open(pid_file) as f:
+            try:
+                pid = int(f.read().strip())
+                # Check if process exists in /proc
+                if os.path.exists(f"/proc/{pid}"):
+                    print(f"Channel '{cid}' is running (pid={pid})")
+                    return
+            except ValueError:
+                pass
+
+        # If we get here, the process is not running
+        os.remove(pid_file)
+
+    print(f"Channel '{cid}' is stopped")
