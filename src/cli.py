@@ -5,7 +5,7 @@ import argparse
 from pathlib import Path
 from handlers import registry_manager as rm
 from handlers import playback_manager as pm
-from handlers.channel_manager import add_channel
+from handlers import channel_manager as cm
 
 
 def main():
@@ -20,20 +20,26 @@ def main():
     p_add.add_argument('name', help='Display name for the channel')
     p_add.add_argument('path', help='Path to media directory or playlist file')
 
+    # List command
     sub.add_parser('list', help='List all configured channels')
 
+    # Start command
     p_start = sub.add_parser('start', help='Start a channel')
     p_start.add_argument('id', help='Channel ID to start')
 
+    # Stop command
     p_stop = sub.add_parser('stop', help='Stop a channel')
     p_stop.add_argument('id', help='Channel ID to stop')
 
+    # Restart command
     p_restart = sub.add_parser('restart', help='Restart a channel')
     p_restart.add_argument('id', help='Channel ID to restart')
 
+    # Status command
     p_status = sub.add_parser('status', help='Show status of channels')
     p_status.add_argument('id', nargs='?', help='Channel ID (omit for all)')
 
+    # Run command
     p_run = sub.add_parser('run', help='Start one or more channels')
     p_run.add_argument('ids', nargs='*', help='Channel IDs (omit for all)')
 
@@ -41,7 +47,7 @@ def main():
     registry = rm.load_registry()
 
     if args.command == 'add':
-        add_channel(args.id, args.name, args.path)
+        cm.add_channel(args.id, args.name, args.path)
 
     elif args.command == 'list':
         for cfg in registry:
