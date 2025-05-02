@@ -82,8 +82,8 @@ def list_channels(self):
 def channel_is_running(cfg):
     cid = cfg["id"]
     conf = load_config()
-    HLS_ROOT = conf["Paths"]["HLS_ROOT"]
-    pid_file = os.path.join(HLS_ROOT, cid, f"{cid}.pid")
+    CHAN_ROOT = conf["Paths"]["CHAN_ROOT"]
+    pid_file = os.path.join(CHAN_ROOT, cid, f"{cid}.pid")
 
     if os.path.exists(pid_file):
         with open(pid_file) as f:
