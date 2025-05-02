@@ -1,26 +1,44 @@
 from pathlib import Path
 from . import registry_manager as rm
+from utils.config_reader import load_config
 
 
 def add_channel(chan_id: str, display_name: str, media_path: str):
     reg = rm.load_registry()
     if any(cfg["id"] == chan_id for cfg in reg):
         print(f"🔔 Channel '{chan_id}' already exists.")
-        return
-    p = Path(media_path)
-    if not p.is_dir():
-        print(f"❌ Invalid media path: {media_path}")
-        return
+        return False
 
-    reg.append({
+    p = Path(media_path)
+    if not p.exists():
+        print(f"❌ Path does not exist: {media_path}")
+        return False
+
+    config = load_config()
+    video_exts = [ext.strip() for ext in config.get(
+        'Video', 'VIDEO_EXTS', fallback='.mp4,.mkv,.avi').split(',')]
+
+    entry = {
         "id": chan_id,
         "name": display_name,
-        "media_dir": str(p.resolve()),
         "recursive": False
-    })
-    rm.save_registry(reg)
+    }
 
-    print(f"✅ Added channel '{chan_id}' → '{display_name}' @ {media_path}")
+    if p.is_file():
+        if p.suffix not in video_exts and p.suffix != '.m3u8':
+            print(
+                f"❌ Invalid file type: {p.suffix}. Must be a video file {video_exts} or playlist (.m3u8)")
+            return False
+        entry["media_file"] = str(p.resolve())
+        print(
+            f"✅ Added channel '{chan_id}' → '{display_name}' with media file: {media_path}")
+    else:  # is directory
+        entry["media_dir"] = str(p.resolve())
+        print(
+            f"✅ Added channel '{chan_id}' → '{display_name}' with media directory: {media_path}")
+
+    reg.append(entry)
+    rm.save_registry(reg)
     return True
 
 

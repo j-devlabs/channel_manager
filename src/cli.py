@@ -5,6 +5,7 @@ import argparse
 from pathlib import Path
 from handlers import registry_manager as rm
 from handlers import playback_manager as pm
+from handlers.channel_manager import add_channel
 
 
 def main():
@@ -12,6 +13,12 @@ def main():
         prog="channel-manager",
         description="Manage HLS channels via ffmpeg")
     sub = parser.add_subparsers(dest='command', required=True)
+
+    # Add command
+    p_add = sub.add_parser('add', help='Add a new channel')
+    p_add.add_argument('id', help='Channel ID')
+    p_add.add_argument('name', help='Display name for the channel')
+    p_add.add_argument('path', help='Path to media directory or playlist file')
 
     sub.add_parser('list', help='List all configured channels')
 
@@ -33,7 +40,10 @@ def main():
     args = parser.parse_args()
     registry = rm.load_registry()
 
-    if args.command == 'list':
+    if args.command == 'add':
+        add_channel(args.id, args.name, args.path)
+
+    elif args.command == 'list':
         for cid in registry:
             print(cid)
 
