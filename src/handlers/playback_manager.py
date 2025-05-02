@@ -1,8 +1,8 @@
-
 import os
 from pathlib import Path
 import subprocess
 import signal
+from . import playlist_manager as playlist
 from utils.config_reader import load_config
 
 # Start a single channel: spawn ffmpeg in background, record its PID
@@ -65,8 +65,27 @@ def launch_ffmpeg(cfg, concat_path):
 
 
 def start_channel(cfg):
+    cid = cfg["id"]
+    conf = load_config()
+    HLS_ROOT = Path(conf["Paths"]["HLS_ROOT"])
+    pid_file = HLS_ROOT/cid/f"{cid}.pid"
 
-    pass
+    # Check if already running
+    if os.path.exists(pid_file):
+        print(f"Channel '{cid}' is already running.")
+        return
+
+    # Build playlist path
+    playlist_path = playlist.build_playlist(
+        cid, cfg["media_dir"], cfg["recursive"])
+
+    # Launch ffmpeg process
+    try:
+        pid = launch_ffmpeg(cfg, playlist_path)
+        return pid
+    except Exception as e:
+        print(f"Failed to start channel '{cid}': {str(e)}")
+        return None
 
 
 def stop_channel(cfg):
