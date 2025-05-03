@@ -8,33 +8,34 @@ from utils.config_reader import load_config
 
 # Start a single channel: spawn ffmpeg in background, record its PID
 
+conf = load_config()
+CHAN_ROOT = Path(conf["Paths"]["CHAN_ROOT"])
+HLS_ROOT = Path(conf["Paths"]["HLS_ROOT"])
+SEGMENT_TIME = conf["HLS"]["SEGMENT_TIME"]
+LIST_SIZE = conf["HLS"]["LIST_SIZE"]
 
-def launch_ffmpeg(cfg, concat_path):
+
+def launch_ffmpeg(cfg: dict, concat_path: Path) -> subprocess.Popen:
     cid = cfg["id"]
-    conf = load_config()
-    CHAN_ROOT = Path(conf["Paths"]["CHAN_ROOT"])
-    HLS_ROOT = Path(conf["Paths"]["HLS_ROOT"])
-    SEGMENT_TIME = conf["HLS"]["SEGMENT_TIME"]
-    LIST_SIZE = conf["HLS"]["LIST_SIZE"]
-    out_dir = HLS_ROOT/cid
-    log_dir = CHAN_ROOT/cid
-    os.makedirs(out_dir, exist_ok=True)
-    os.makedirs(log_dir, exist_ok=True)
+    stream_dir = HLS_ROOT/cid
+    chan_dir = CHAN_ROOT/cid
+    os.makedirs(stream_dir, exist_ok=True)
+    os.makedirs(chan_dir, exist_ok=True)
 
     # Build ffmpeg command
     cmd = [
         "ffmpeg",
+        # Input rate control must come before input
+        "-re",
         # Allow file protocol for concat
         "-protocol_whitelist", "file,pipe,concat",
+        # Handle broken timestamps
+        "-fflags", "+genpts+igndts+discardcorrupt",
+        "-err_detect", "ignore_err",
         # concat demuxer with necessary options
         "-f", "concat",
         "-safe", "0",
         "-i", str(concat_path),
-        # maintain input rate after concat
-        "-re",
-        # regenerate PTS & handle broken timestamps
-        "-fflags", "+genpts+igndts+discardcorrupt",
-        "-err_detect", "ignore_err",
         # copy streams but force any negative ts → 0
         "-c:v", "copy", "-c:a", "copy",
         "-avoid_negative_ts", "make_zero",
@@ -43,17 +44,15 @@ def launch_ffmpeg(cfg, concat_path):
         "-hls_time", str(SEGMENT_TIME),
         "-hls_list_size", str(LIST_SIZE),
         "-hls_flags", "delete_segments+independent_segments",
-        str(out_dir/"index.m3u8")
+        str(stream_dir/"index.m3u8")
     ]
 
     # Open log files
-    stdout_log = cfg.get(
-        "log_stdout", os.path.join(log_dir, f"{cid}.out.log"))
-    stderr_log = cfg.get(
-        "log_stderr", os.path.join(log_dir, f"{cid}.err.log"))
+    stdout_log = chan_dir/"ffmpeg.out.log"
+    stderr_log = chan_dir/"ffmpeg.err.log"
 
     # Launch ffmpeg in its own process group
-    p = subprocess.Popen(
+    proc = subprocess.Popen(
         cmd,
         stdout=open(stdout_log, "a"),
         stderr=open(stderr_log, "a"),
@@ -61,19 +60,16 @@ def launch_ffmpeg(cfg, concat_path):
     )
 
     # Store PID for later control
-    pid_file = os.path.join(CHAN_ROOT, cid, f"{cid}.pid")
+    pid_file = CHAN_ROOT/cid/"channel.pid"
     with open(pid_file, "w") as f:
-        f.write(str(p.pid))
+        f.write(str(proc.pid))
 
-    print(f"Started channel '{cid}' (pid={p.pid})")
-    return p.pid
+    print(f"Started channel '{cid}' (pid={proc.pid})")
+    return proc
 
 
 def start_channel(cfg):
     cid = cfg["id"]
-    conf = load_config()
-    CHAN_ROOT = Path(conf["Paths"]["CHAN_ROOT"])
-    pid_file = CHAN_ROOT/cid/f"{cid}.pid"
 
     # Check if already running
     if cm.channel_is_running(cfg):
@@ -86,8 +82,8 @@ def start_channel(cfg):
 
     # Launch ffmpeg process
     try:
-        pid = launch_ffmpeg(cfg, playlist_path)
-        return pid
+        p = launch_ffmpeg(cfg, playlist_path)
+        return p.pid
     except Exception as e:
         print(f"Failed to start channel '{cid}': {str(e)}")
         return None
@@ -95,9 +91,7 @@ def start_channel(cfg):
 
 def stop_channel(cfg):
     cid = cfg["id"]
-    conf = load_config()
-    CHAN_ROOT = conf["Paths"]["CHAN_ROOT"]
-    pid_file = os.path.join(CHAN_ROOT, cid, f"{cid}.pid")
+    pid_file = CHAN_ROOT/cid/"channel.pid"
     if not os.path.exists(pid_file):
         print(f"Channel '{cid}' is not running (no pid file).")
         return
