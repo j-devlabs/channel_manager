@@ -24,13 +24,17 @@ def launch_ffmpeg(cfg, concat_path):
     # Build ffmpeg command
     cmd = [
         "ffmpeg",
+        # Allow file protocol for concat
+        "-protocol_whitelist", "file,pipe,concat",
+        # concat demuxer with necessary options
+        "-f", "concat",
+        "-safe", "0",
+        "-i", str(concat_path),
+        # maintain input rate after concat
         "-re",
-        # regenerate PTS & ignore broken DTS
-        "-fflags", "+genpts+igndts",
-        # loop the entire playlist forever
-        "-stream_loop", "-1",
-        # concat demuxer
-        "-f", "concat", "-safe", "0", "-i", str(concat_path),
+        # regenerate PTS & handle broken timestamps
+        "-fflags", "+genpts+igndts+discardcorrupt",
+        "-err_detect", "ignore_err",
         # copy streams but force any negative ts → 0
         "-c:v", "copy", "-c:a", "copy",
         "-avoid_negative_ts", "make_zero",
@@ -38,7 +42,7 @@ def launch_ffmpeg(cfg, concat_path):
         "-f", "hls",
         "-hls_time", str(SEGMENT_TIME),
         "-hls_list_size", str(LIST_SIZE),
-        "-hls_flags", "delete_segments",
+        "-hls_flags", "delete_segments+independent_segments",
         str(out_dir/"index.m3u8")
     ]
 
