@@ -96,8 +96,8 @@ def start_channel(cfg):
 def stop_channel(cfg):
     cid = cfg["id"]
     conf = load_config()
-    HLS_ROOT = conf["paths"]["hls_root"]
-    pid_file = os.path.join(HLS_ROOT, cid, f"{cid}.pid")
+    CHAN_ROOT = conf["Paths"]["CHAN_ROOT"]
+    pid_file = os.path.join(CHAN_ROOT, cid, f"{cid}.pid")
     if not os.path.exists(pid_file):
         print(f"Channel '{cid}' is not running (no pid file).")
         return
