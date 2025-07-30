@@ -57,4 +57,5 @@ htmlcov/
 
 # channel-manager
 config/
+.config/
 channels/
