@@ -83,8 +83,7 @@ def channel_is_running(cfg):
     cid = cfg["id"]
     conf = load_config()
     CHAN_ROOT = conf["Paths"]["CHAN_ROOT"]
-    pid_file = os.path.join(CHAN_ROOT, cid, f"{cid}.pid")
-
+    pid_file = os.path.join(CHAN_ROOT, cid, "channel.pid")
     if os.path.exists(pid_file):
         with open(pid_file) as f:
             try:
