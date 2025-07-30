@@ -27,31 +27,21 @@ def launch_ffmpeg(cfg: dict, concat_path: Path) -> subprocess.Popen:
         "ffmpeg",
         # Input rate control must come before input
         "-re",
-        # Allow file protocol for concat
-        # "-protocol_whitelist", "file,pipe,concat",
-        # Reset timestamps and handle discontinuities
-        # "-max_interleave_delta", "0",
-        # "-dts_delta_threshold", "100",
-        # "-max_delay", "5000000",
         # concat demuxer with necessary options
         "-f", "concat",
         "-safe", "0",
         "-i", str(concat_path),
         # Handle broken timestamps and errors
-        "-fflags", "+genpts", #+igndts+discardcorrupt",
-        # "-err_detect", "ignore_err",
+        "-fflags", "+genpts",
         "-avoid_negative_ts", "make_zero",
         "-reset_timestamps", "1",
         # copy streams but handle timestamps carefully
         "-c:v", "copy", "-c:a", "copy",
-        # "-start_at_zero",
-        # "-copyts",
-        # "-vsync", "1",
         # HLS settings
         "-f", "hls",
         "-hls_time", str(SEGMENT_TIME),
         "-hls_list_size", str(LIST_SIZE),
-        "-hls_flags", "delete_segments",  # +independent_segments+discont_start",
+        "-hls_flags", "delete_segments",
         str(stream_dir/"index.m3u8")
     ]
 
