@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 import subprocess
 import signal
+from time import sleep
 from . import playlist_manager as playlist
 from . import channel_manager as cm
 from utils.config_reader import load_config
@@ -9,6 +10,7 @@ from utils.config_reader import load_config
 # Start a single channel: spawn ffmpeg in background, record its PID
 
 conf = load_config()
+
 CHAN_ROOT = Path(conf["Paths"]["CHAN_ROOT"])
 HLS_ROOT = Path(conf["Paths"]["HLS_ROOT"])
 SEGMENT_TIME = conf["HLS"]["SEGMENT_TIME"]
@@ -66,13 +68,76 @@ def launch_ffmpeg(cfg: dict, concat_path: Path) -> subprocess.Popen:
     return proc
 
 
+def launch_ffmpeg_media_dir_loop(media_dir: Path, output_dir: Path, recursive: bool = False, segment_time: int = 10, list_size: int = 6) -> subprocess.Popen:
+    video_paths = playlist.get_media_files(
+        media_dir, recursive)
+
+    while True:
+        for video_path in video_paths:
+            # Clear existing segments
+            for f in output_dir.glob("*.ts"):
+                f.unlink()
+            (output_dir / "index.m3u8").unlink(missing_ok=True)
+
+            cmd = [
+                "ffmpeg",
+                "-re",
+                "-i", str(Path(video_path)),
+                "-fflags", "+genpts",
+                "-avoid_negative_ts", "make_zero",
+                "-reset_timestamps", "1",
+                "-vsync", "1",
+                "-muxdelay", "0.1",
+                "-c:v", "copy",
+                "-c:a", "copy",
+                "-f", "hls",
+                "-hls_time", str(segment_time),
+                "-hls_list_size", str(list_size),
+                "-hls_flags", "delete_segments+independent_segments",
+                str(output_dir / "index.m3u8")
+            ]
+
+            # Open log files
+            stderr_log = output_dir/"ffmpeg.err.log"
+
+            proc = subprocess.Popen(
+                cmd,
+                stdout=subprocess.DEVNULL,
+                stderr=open(stderr_log, "a")
+            )
+
+            proc.wait()
+            sleep(2)  # small buffer between clips
+
+
+def launch_loop(media_dir: Path, output_dir: Path, recursive: bool = False) -> subprocess.Popen:
+    script_path = Path(conf["Paths"]["ROOT"])/"src"/"run_channel.py"
+
+    proc = subprocess.Popen([
+        "python3", script_path,
+        media_dir,
+        output_dir,
+        str(recursive)
+    ],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        preexec_fn=os.setsid
+    )
+
+    return proc
+
+
 def start_channel(cfg):
     cid = cfg["id"]
+    media_dir = cfg["media_dir"]
+    chan_dir = CHAN_ROOT/cid
 
     # Check if already running
     if cm.channel_is_running(cfg):
         print(f"Channel '{cid}' is already running.")
         return
+
+    os.makedirs(chan_dir, exist_ok=True)
 
     # Build playlist path
     playlist_path = playlist.build_playlist(
@@ -80,7 +145,14 @@ def start_channel(cfg):
 
     # Launch ffmpeg process
     try:
-        p = launch_ffmpeg(cfg, playlist_path)
+        # p = launch_ffmpeg(cfg, playlist_path)
+        p = launch_loop(media_dir, chan_dir)
+        # Store the process ID
+        with open(chan_dir/"channel.pid", "w") as f:
+            f.write(str(p.pid))
+        # Add to master playlist
+        playlist.add_to_master(cid, cfg["name"])
+        print(f"Started channel '{cid}' (pid={p.pid})")
         return p.pid
     except Exception as e:
         print(f"Failed to start channel '{cid}': {str(e)}")
