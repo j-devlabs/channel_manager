@@ -2,17 +2,18 @@ import os
 from pathlib import Path
 from . import registry_manager as rm
 from utils.config_reader import load_config
+from utils import logger as logger
 
 
 def add_channel(chan_id: str, display_name: str, media_path: str):
     reg = rm.load_registry()
     if any(cfg["id"] == chan_id for cfg in reg):
-        print(f"🔔 Channel '{chan_id}' already exists.")
+        logger.log(f"🔔 Channel '{chan_id}' already exists.")
         return False
 
     p = Path(media_path)
     if not p.exists():
-        print(f"❌ Path does not exist: {media_path}")
+        logger.log(f"❌ Path does not exist: {media_path}")
         return False
 
     config = load_config()
